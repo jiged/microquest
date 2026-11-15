@@ -1,0 +1,17 @@
+{
+  "name": "MicroQuest",
+  "revisionLabel": "Add Student Sign-In Fields",
+  "description": "A polished, colorful microscopic-world exploration quest for Chromebook play, launched from the creator’s website. Players choose biology topics aligned with North Carolina’s 2023 standards, then answer review questions to unlock paths, restore microscopic habitats, and collect specimens.",
+  "mode": "Universal",
+  "exportDate": "2026-11-15T00:55:05.472Z",
+  "rosebudBuiltInSplash": {
+    "present": true,
+    "version": 1
+  },
+  "assetCount": 9,
+  "assetTypes": [
+    "audio",
+    "image",
+    "model"
+  ]
+}

@@ -1,0 +1,6 @@
+- Style: vivid microscopic world like imaginative science illustration; glowing cells, translucent membranes, jewel tones.
+- Palette: Phase 1 uses teal, magenta, and violet on deep aqua; Phase 2 shifts toward emerald, cyan, and warm gold energy tones.
+- Fonts: Fredoka (display), Nunito (body).
+- UI: rounded translucent glass panels, clear topic cards, and a visible two-stage progression track.
+- Environments: Phase 1 Cell Core is a cool aqua/teal cell interior; Phase 2 Mitochondrial Garden is an emerald energy realm.
+- Assets: core-fluid skybox, cell-tissue ground tile, mitochondrial garden skybox and ground tile, explorer character, specimen microbe model.

@@ -1,0 +1,3 @@
+- Music: calm, curious, bubbly ambient electronic loop.
+- SFX: correct-answer sparkle chime, wrong-answer soft bloop.
+- Audio unlocks on first click (Start button).

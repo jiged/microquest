@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Micro Quest: Biology Review</title>
+    <link rel="stylesheet" href="./rosebud/game-defaults.css" />
+    <script src="./rosebud/game-defaults.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://esm.sh/three@0.184.0",
+          "three/": "https://esm.sh/three@0.184.0/"
+        }
+      }
+    </script>
+    <style>
+      :root { color-scheme: dark; --aqua: #55f3dc; --pink: #ff8cdd; --gold: #ffd66e; --ink: #071d2a; }
+      * { box-sizing: border-box; }
+      html, body, #game-container { width: 100%; height: 100%; margin: 0; padding: 0; background: #04222a; overflow: hidden; }
+      body { touch-action: none; font-family: 'Nunito', sans-serif; color: #effffc; }
+      canvas { display: block; }
+      #ui-container { position: fixed; inset: 0; pointer-events: none; }
+      .panel { pointer-events: auto; background: rgba(7, 29, 43, .88); border: 1px solid rgba(85, 243, 220, .55); border-radius: 22px; backdrop-filter: blur(12px); box-shadow: 0 18px 60px rgba(0, 0, 0, .38), 0 0 36px rgba(63, 240, 216, .13); }
+      button { font: inherit; color: inherit; cursor: pointer; }
+      button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+      .hidden { display: none !important; }
+      #menu { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(920px, calc(100vw - 28px)); max-height: min(92vh, 880px); overflow-y: auto; padding: clamp(20px, 4vw, 38px); text-align: left; border-color: rgba(85, 243, 220, .7); }
+      .menu-kicker, .eyebrow { color: var(--aqua); text-transform: uppercase; letter-spacing: .15em; font-weight: 900; font-size: 11px; }
+      .menu-title { margin: 5px 0 2px; font: 700 clamp(42px, 7vw, 66px)/1 'Fredoka', sans-serif; letter-spacing: -.04em; color: #fff; text-shadow: 0 0 28px rgba(255, 63, 191, .5); }
+      .menu-title span { color: var(--pink); }
+      .menu-lead { max-width: 670px; margin: 10px 0 22px; color: #c9e9e8; font-size: 16px; line-height: 1.55; }
+      .student-login { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 17px 0 20px; padding: 14px; border: 1px solid rgba(85, 243, 220, .28); border-radius: 15px; background: rgba(6, 36, 49, .58); }
+      .login-field label { display: block; margin: 0 0 6px; color: #d8f3ef; font: 600 14px 'Fredoka', sans-serif; }
+      .login-field input { width: 100%; min-height: 43px; padding: 10px 12px; border: 1px solid rgba(174, 214, 214, .3); border-radius: 10px; outline: none; background: rgba(2, 21, 32, .75); color: #f2fffd; font: 600 15px 'Nunito', sans-serif; }
+      .login-field input:focus { border-color: var(--aqua); box-shadow: 0 0 0 3px rgba(85, 243, 220, .15); }
+      .login-field input::placeholder { color: #78989d; }
+      .login-note { grid-column: 1 / -1; margin: 0; color: #a9c8ca; font-size: 11px; line-height: 1.4; }
+      .journey-track { display: grid; grid-template-columns: 1fr 54px 1fr; align-items: center; margin: 18px 0 24px; }
+      .phase-card { min-height: 78px; display: flex; align-items: center; gap: 13px; padding: 13px 15px; border-radius: 15px; background: rgba(21, 78, 88, .56); border: 1px solid rgba(85, 243, 220, .52); }
+      .phase-card.locked { background: rgba(31, 37, 62, .56); border-color: rgba(170, 157, 255, .35); }
+      .phase-number { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%; color: var(--ink); background: var(--aqua); font: 700 16px 'Fredoka', sans-serif; }
+      .phase-card.locked .phase-number { background: #9185c9; }
+      .phase-title { display: block; font: 600 17px 'Fredoka', sans-serif; }
+      .phase-note { display: block; margin-top: 3px; color: #b9d2d5; font-size: 12px; line-height: 1.35; }
+      .track-link { height: 2px; background: linear-gradient(90deg, var(--aqua), #8273c9); position: relative; }
+      .track-link::after { content: '›'; position: absolute; right: -1px; top: -13px; color: #c7b9ff; font: 700 24px 'Fredoka', sans-serif; }
+      .topic-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+      .topic-heading h2 { margin: 0; font: 600 23px 'Fredoka', sans-serif; }
+      .topic-heading p { margin: 3px 0 0; color: #a9c9cb; font-size: 13px; }
+      .quiet-button { border: 1px solid rgba(85, 243, 220, .45); background: rgba(20, 71, 81, .55); border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 800; white-space: nowrap; }
+      .quiet-button:hover { background: rgba(33, 111, 117, .8); }
+      .topic-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .topic-card { min-height: 84px; width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 14px; border-radius: 15px; border: 1px solid rgba(169, 201, 203, .22); background: rgba(8, 41, 55, .78); transition: border-color .16s, background .16s, transform .16s; }
+      .topic-card:hover { transform: translateY(-2px); border-color: rgba(85, 243, 220, .6); }
+      .topic-card[aria-pressed="true"] { border-color: var(--aqua); background: rgba(17, 93, 99, .58); box-shadow: inset 0 0 0 1px rgba(85, 243, 220, .16); }
+      .topic-icon { font-size: 25px; flex: 0 0 32px; text-align: center; }
+      .topic-copy { min-width: 0; flex: 1; }
+      .topic-name { display: block; font: 600 16px 'Fredoka', sans-serif; }
+      .topic-description { display: block; margin-top: 3px; color: #b3ced0; font-size: 12px; line-height: 1.35; }
+      .topic-check { color: #81999f; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; }
+      .topic-card[aria-pressed="true"] .topic-check { color: var(--aqua); }
+      .menu-actions { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; }
+      #topic-count { color: #c2dcdd; font-size: 13px; }
+      .primary-button { border: 0; border-radius: 13px; padding: 13px 22px; min-width: 190px; color: #08232c; background: linear-gradient(135deg, #66f6dc, #a7f5c5); box-shadow: 0 6px 22px rgba(73, 236, 211, .2); font: 700 18px 'Fredoka', sans-serif; transition: transform .15s, filter .15s; }
+      .primary-button:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.06); }
+      .primary-button:disabled { opacity: .4; cursor: not-allowed; }
+      .controls-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 17px; padding-top: 14px; border-top: 1px solid rgba(210, 240, 238, .12); color: #aec6ca; font-size: 12px; }
+      .key { display: inline-block; margin-right: 3px; padding: 3px 7px; border: 1px solid rgba(205, 233, 231, .27); border-radius: 6px; color: #e8fffb; background: rgba(255,255,255,.07); font: 700 11px 'Nunito', sans-serif; }
+      #hud { position: absolute; top: 14px; left: 14px; min-width: 245px; padding: 14px 16px; font-family: 'Nunito', sans-serif; }
+      .hud-zone { margin-bottom: 9px; padding-bottom: 9px; border-bottom: 1px solid rgba(255,255,255,.13); }
+      .hud-zone strong { display: block; margin-top: 2px; font: 600 20px 'Fredoka', sans-serif; }
+      .hud-objective { margin-top: 3px; color: #bdd7d8; font-size: 12px; }
+      .hud-counts { line-height: 1.65; font-size: 13px; }
+      .hud-score { margin-top: 5px; color: var(--gold); font-weight: 900; }
+      #prompt { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); max-width: calc(100vw - 24px); padding: 11px 18px; font: 600 17px 'Fredoka', sans-serif; text-align: center; }
+      #quiz { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100vw - 24px)); padding: clamp(20px, 4vw, 32px); text-align: center; }
+      #quiz h2 { margin: 0 0 10px; color: var(--pink); font: 600 27px 'Fredoka', sans-serif; }
+      #qtext { margin: 12px 0 18px; font-size: 19px; line-height: 1.45; }
+      #choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      #choices button { min-height: 48px; padding: 10px 12px; border: 1px solid rgba(85,243,220,.55); border-radius: 12px; background: rgba(18, 78, 87, .88); font: 700 15px 'Nunito', sans-serif; }
+      #choices button:hover:not(:disabled) { background: #207b7b; }
+      #choices button:disabled { cursor: default; opacity: .8; }
+      #choices button.sel { color: #fff; border-color: var(--pink); background: #912d77; }
+      #feedback { min-height: 28px; margin-top: 13px; font-weight: 800; line-height: 1.45; }
+      #phase-banner { position: absolute; left: 50%; top: 17%; transform: translateX(-50%); width: min(520px, calc(100vw - 24px)); padding: 17px 23px; text-align: center; border-color: rgba(255, 214, 110, .75); background: rgba(8, 39, 43, .92); animation: banner-in .35s ease-out both; }
+      #phase-banner strong { display: block; color: var(--gold); font: 700 25px 'Fredoka', sans-serif; }
+      #phase-banner span { display: block; margin-top: 4px; color: #d4efdf; font-size: 14px; }
+      @keyframes banner-in { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+      @media (max-width: 620px) {
+        #menu { padding: 20px 17px; max-height: 94vh; }
+        .menu-lead { font-size: 14px; margin-bottom: 15px; }
+        .student-login { grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; margin: 12px 0 16px; }
+        .login-field label { font-size: 13px; }
+        .login-field input { min-height: 40px; padding: 8px; font-size: 13px; }
+        .login-note { font-size: 10px; }
+        .journey-track { grid-template-columns: 1fr 26px 1fr; margin: 13px 0 19px; }
+        .phase-card { gap: 8px; padding: 10px 8px; min-height: 72px; }
+        .phase-number { width: 28px; height: 28px; flex-basis: 28px; font-size: 14px; }
+        .phase-title { font-size: 14px; }
+        .phase-note { font-size: 10px; }
+        .topic-heading h2 { font-size: 20px; }
+        .topic-grid { gap: 7px; }
+        .topic-card { min-height: 80px; gap: 7px; padding: 10px 8px; }
+        .topic-icon { flex-basis: 24px; font-size: 20px; }
+        .topic-name { font-size: 14px; }
+        .topic-description { font-size: 10px; }
+        .topic-check { font-size: 9px; }
+        .menu-actions { align-items: stretch; flex-direction: column; }
+        .primary-button { width: 100%; }
+        #hud { top: 8px; left: 8px; min-width: 0; padding: 10px 12px; }
+        .hud-zone strong { font-size: 17px; }
+        #prompt { bottom: 12px; font-size: 15px; }
+        #choices { grid-template-columns: 1fr; }
+      }
+    </style>
+  
+<style>
+    #rosebud-exported-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+        opacity: 1;
+        transition: opacity 500ms ease-in-out;
+    }
+
+    #rosebud-exported-splash.is-hiding {
+        opacity: 0;
+    }
+
+    #rosebud-exported-splash .rosebud-exported-splash__content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        text-align: center;
+        color: #fff;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    #rosebud-exported-splash .rosebud-exported-splash__logo {
+        width: 100px;
+        height: 100px;
+        animation: rosebud-exported-splash-breathe 2.4s ease-in-out infinite;
+    }
+
+    #rosebud-exported-splash .rosebud-exported-splash__text {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 16px;
+        line-height: 1.25;
+        letter-spacing: 0.06em;
+    }
+
+    #rosebud-exported-splash .rosebud-exported-splash__text strong {
+        font-weight: 700;
+    }
+
+    #rosebud-exported-splash .rosebud-exported-splash__text span:last-child {
+        opacity: 0.88;
+    }
+
+    @keyframes rosebud-exported-splash-breathe {
+        0%,
+        100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+</style></head>
+  <body>
+<div id="rosebud-exported-splash" aria-live="polite">
+    <div class="rosebud-exported-splash__content">
+        <img
+            class="rosebud-exported-splash__logo"
+            src="__rosebud/rosebud-icon.png"
+            alt="Rosebud Logo"
+            width="100"
+            height="100"
+        />
+        <div class="rosebud-exported-splash__text" aria-label="Rosebud.AI Make Games">
+            <strong>Rosebud.AI</strong>
+            <span>Make Games</span>
+        </div>
+    </div>
+</div>
+    <div id="game-container"></div>
+    <div id="ui-container">
+      <div id="hud" class="panel hidden" aria-live="polite"></div>
+      <div id="prompt" class="panel hidden" aria-live="polite">Press E to investigate</div>
+      <div id="phase-banner" class="panel hidden" aria-live="polite"><strong id="phase-banner-title"></strong><span id="phase-banner-copy"></span></div>
+      <main id="menu" class="panel" role="dialog" aria-modal="true" aria-labelledby="menu-title">
+        <div class="menu-kicker">A biology exploration quest</div>
+        <h1 id="menu-title" class="menu-title">Micro<span>Quest</span></h1>
+        <p class="menu-lead">Explore a living microscopic world. Answer review questions to bring damaged habitats back to life, open the next region, and collect glowing specimens.</p>
+        <section class="student-login" aria-label="Student sign-in preview">
+          <div class="login-field"><label for="student-id">Student ID</label><input id="student-id" name="student-id" type="text" autocomplete="off" placeholder="Enter your student ID" /></div>
+          <div class="login-field"><label for="student-pin">PIN</label><input id="student-pin" name="student-pin" type="password" inputmode="numeric" autocomplete="off" placeholder="Enter your PIN" /></div>
+          <p id="login-feedback" class="login-note" aria-live="polite">Preview fields only: this build checks that both are filled. Website sign-in and progress saving will be connected separately.</p>
+        </section>
+        <div class="journey-track" aria-label="Two-stage quest">
+          <div class="phase-card"><span class="phase-number">01</span><span><span class="phase-title">Cell Core</span><span class="phase-note">Restore three inner habitats</span></span></div>
+          <span class="track-link" aria-hidden="true"></span>
+          <div class="phase-card locked"><span class="phase-number">02</span><span><span class="phase-title">Mitochondrial Garden</span><span class="phase-note">Unlock the energy-rich outer zone</span></span></div>
+        </div>
+        <section aria-labelledby="topic-heading">
+          <div class="topic-heading"><div><h2 id="topic-heading">Choose your review topics</h2><p>All topics are selected to start. Pick one or more.</p></div><button id="select-all" class="quiet-button" type="button">Clear selection</button></div>
+          <div id="topics" class="topic-grid"></div>
+        </section>
+        <div class="menu-actions"><span id="topic-count" aria-live="polite"></span><button id="start" class="primary-button" type="button">Begin the quest <span aria-hidden="true">→</span></button></div>
+        <div class="controls-row" aria-label="Game controls"><span><b class="key">W A S D</b> move</span><span><b class="key">Mouse</b> look</span><span><b class="key">Shift</b> run</span><span><b class="key">Space</b> jump</span><span><b class="key">E</b> investigate</span></div>
+      </main>
+      <div id="quiz" class="panel hidden" role="dialog" aria-modal="true" aria-labelledby="qtitle">
+        <h2 id="qtitle"></h2>
+        <p id="qtext"></p>
+        <div id="choices"></div>
+        <div id="feedback" aria-live="polite"></div>
+      </div>
+    </div>
+    <script src="https://rosebud.ai/sdk/v1/rosebud.js"></script>
+    <script type="module" src="main.js"></script>
+    <script src="https://storage.googleapis.com/rosebud_staticfiles/ProgressLogger.js"></script>
+    <script src="https://storage.googleapis.com/rosebud_staticfiles/OGP.js"></script>
+  
+<script>
+    (() => {
+        const splashRoot = document.getElementById('rosebud-exported-splash');
+        if (!splashRoot) return;
+
+        let isReady = false;
+        let isMinimumVisibleTimeElapsed = false;
+        let isHidden = false;
+
+        const maybeHideSplash = () => {
+            if (isHidden || !isReady || !isMinimumVisibleTimeElapsed) return;
+
+            isHidden = true;
+            splashRoot.classList.add('is-hiding');
+            window.setTimeout(() => splashRoot.remove(), 500);
+        };
+
+        const markReady = () => {
+            isReady = true;
+            maybeHideSplash();
+        };
+
+        window.setTimeout(() => {
+            isMinimumVisibleTimeElapsed = true;
+            maybeHideSplash();
+        }, 1000);
+
+        if (document.readyState === 'complete') {
+            markReady();
+        } else {
+            window.addEventListener('load', markReady, { once: true });
+        }
+
+        
+    })();
+</script></body>
+</html>
